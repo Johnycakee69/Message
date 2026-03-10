@@ -80,3 +80,5 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`✅ Messenger running at http://localhost:${PORT}`);
 });
+// Time Zone
+time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
