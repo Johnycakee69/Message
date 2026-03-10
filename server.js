@@ -12,7 +12,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Track connected users
 const users = {}; // socketId -> username
-const reactions = {}; // msgId -> { emoji: count }
+
+// Track reactions: { msgId: { emoji: count } }
+const reactions = {};
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
@@ -27,9 +29,6 @@ io.on('connection', (socket) => {
 
     // Notify others
     socket.broadcast.emit('system_message', `${username} joined the chat`);
-
-    // Send existing reactions to the newly joined user
-    socket.emit('all_reactions', reactions);
   });
 
   // Handle incoming messages
@@ -45,26 +44,24 @@ io.on('connection', (socket) => {
     io.emit('receive_message', message);
   });
 
-  // Handle emoji reactions
+  // Handle typing indicator
+  socket.on('typing', (isTyping) => {
+    const username = users[socket.id];
+    socket.broadcast.emit('user_typing', { username, isTyping });
+  });
+
+  // Handle reactions
   socket.on('react_message', ({ msgId, emoji }) => {
     if (!reactions[msgId]) reactions[msgId] = {};
     reactions[msgId][emoji] = (reactions[msgId][emoji] || 0) + 1;
-    // Broadcast to everyone
     io.emit('reaction_update', { msgId, reactions: reactions[msgId] });
   });
 
-  // Handle removing a reaction
   socket.on('unreact_message', ({ msgId, emoji }) => {
     if (reactions[msgId] && reactions[msgId][emoji]) {
       reactions[msgId][emoji] = Math.max(0, reactions[msgId][emoji] - 1);
       io.emit('reaction_update', { msgId, reactions: reactions[msgId] });
     }
-  });
-
-  // Handle typing indicator
-  socket.on('typing', (isTyping) => {
-    const username = users[socket.id];
-    socket.broadcast.emit('user_typing', { username, isTyping });
   });
 
   // Handle disconnect
