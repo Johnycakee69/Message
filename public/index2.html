@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Just Us</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #faf9f7;
+      --surface: #ffffff;
+      --border: #ece9e3;
+      --accent: #b07d62;
+      --accent-soft: #f0e6de;
+      --me-bg: #2c2c2c;
+      --me-text: #faf9f7;
+      --them-bg: #f0ede8;
+      --them-text: #2c2c2c;
+      --text: #1a1a1a;
+      --muted: #999690;
+      --online: #7cb987;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* subtle grain texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── JOIN SCREEN ── */
+    #join-screen {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      animation: fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    .join-title {
+      text-align: center;
+    }
+
+    .join-title h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem;
+      font-weight: 300;
+      font-style: italic;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .join-title p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+      font-weight: 300;
+    }
+
+    #join-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 260px;
+    }
+
+    #join-form input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 13px 18px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      outline: none;
+      transition: border-color 0.2s;
+      letter-spacing: 0.02em;
+    }
+
+    #join-form input::placeholder { color: #ccc; }
+    #join-form input:focus { border-color: var(--accent); }
+
+    #join-form button {
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      padding: 13px;
+      border-radius: 4px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    #join-form button:hover { background: var(--accent); transform: translateY(-1px); }
+    #join-form button:active { transform: translateY(0); }
+
+    /* ── CHAT SCREEN ── */
+    #chat-screen {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      max-width: 620px;
+      height: 100dvh;
+      max-height: 800px;
+      background: var(--surface);
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.06);
+      animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    .chat-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 300;
+      font-style: italic;
+      letter-spacing: -0.3px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .online-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--online);
+    }
+
+    #online-count {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 300;
+      letter-spacing: 0.03em;
+    }
+
+    /* Messages */
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 24px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      scroll-behavior: smooth;
+    }
+
+    #messages::-webkit-scrollbar { width: 3px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .msg-row {
+      display: flex;
+      flex-direction: column;
+      max-width: 68%;
+      animation: bubbleIn 0.25s cubic-bezier(0.22,1,0.36,1) both;
+      position: relative;
+    }
+
+    .msg-row.me { align-self: flex-end; align-items: flex-end; }
+    .msg-row.them { align-self: flex-start; align-items: flex-start; }
+
+    /* spacing between different senders */
+    .msg-row.gap-top { margin-top: 14px; }
+
+    .msg-name {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+      padding: 0 2px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 400;
+    }
+
+    .bubble-wrap {
+      position: relative;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: inherit;
+    }
+
+    .bubble {
+      padding: 10px 15px;
+      border-radius: 3px;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      word-break: break-word;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      position: relative;
+    }
+
+    .bubble:hover { opacity: 0.88; }
+
+    .me .bubble {
+      background: var(--me-bg);
+      color: var(--me-text);
+      border-bottom-right-radius: 1px;
+    }
+
+    .them .bubble {
+      background: var(--them-bg);
+      color: var(--them-text);
+      border-bottom-left-radius: 1px;
+    }
+
+    .msg-time {
+      font-size: 0.62rem;
+      color: var(--muted);
+      margin-top: 4px;
+      padding: 0 2px;
+      font-weight: 300;
+      letter-spacing: 0.03em;
+    }
+
+    /* Reaction row */
+    .reaction-bar {
+      display: none;
+      gap: 4px;
+      margin-top: 5px;
+      flex-wrap: wrap;
+    }
+
+    .reaction-bar.visible { display: flex; }
+
+    .reaction-chip {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      animation: popIn 0.2s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    .reaction-chip:hover { transform: scale(1.1); border-color: var(--accent); }
+    .reaction-chip .count { font-size: 0.7rem; color: var(--muted); }
+
+    /* Emoji picker */
+    .emoji-picker {
+      position: absolute;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: none;
+      gap: 6px;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      bottom: calc(100% + 6px);
+    }
+
+    .emoji-picker.show { display: flex; }
+    .me .emoji-picker { right: 0; }
+    .them .emoji-picker { left: 0; }
+
+    .emoji-picker span {
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 3px;
+      border-radius: 4px;
+      transition: transform 0.12s, background 0.12s;
+    }
+
+    .emoji-picker span:hover { transform: scale(1.3); background: var(--accent-soft); }
+
+    /* System messages */
+    .system-msg {
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--muted);
+      padding: 10px 0 4px;
+      letter-spacing: 0.04em;
+      font-style: italic;
+      animation: fadeIn 0.3s ease both;
+    }
+
+    /* Typing indicator */
+    #typing-indicator {
+      min-height: 28px;
+      padding: 4px 24px;
+      font-size: 0.72rem;
+      color: var(--accent);
+      font-style: italic;
+      font-weight: 300;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 3px;
+      align-items: center;
+    }
+
+    .typing-dots span {
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: typingDot 1.2s infinite;
+    }
+
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    /* Input area */
+    .chat-input-area {
+      padding: 12px 16px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    #msg-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 11px 16px;
+      border-radius: 3px;
+      font-size: 0.88rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      outline: none;
+      resize: none;
+      max-height: 110px;
+      line-height: 1.5;
+      transition: border-color 0.2s;
+      letter-spacing: 0.01em;
+    }
+
+    #msg-input:focus { border-color: var(--accent); }
+    #msg-input::placeholder { color: #ccc; }
+
+    #send-btn {
+      background: var(--text);
+      border: none;
+      color: var(--bg);
+      width: 40px; height: 40px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, transform 0.1s;
+      flex-shrink: 0;
+      letter-spacing: 0.05em;
+    }
+
+    #send-btn:hover { background: var(--accent); transform: translateY(-1px); }
+    #send-btn:active { transform: translateY(0); }
+    #send-btn:disabled { background: var(--border); color: var(--muted); cursor: default; transform: none; }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+
+    @keyframes bubbleIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.6); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes typingDot {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-4px); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- JOIN SCREEN -->
+  <div id="join-screen">
+    <div class="join-title">
+      <h1>just us.</h1>
+      <p>ENTER YOUR NAME TO BEGIN</p>
+    </div>
+    <div id="join-form">
+      <input type="text" id="username-input" placeholder="Your name..." maxlength="20" autocomplete="off" />
+      <button onclick="joinChat()">Enter</button>
+    </div>
+  </div>
+
+  <!-- CHAT SCREEN -->
+  <div id="chat-screen">
+    <div class="chat-header">
+      <div class="header-title">just us.</div>
+      <div class="header-right">
+        <div class="online-dot"></div>
+        <div id="online-count">1 online</div>
+      </div>
+    </div>
+
+    <div id="messages"></div>
+    <div id="typing-indicator"></div>
+
+    <div class="chat-input-area">
+      <textarea id="msg-input" placeholder="Say something..." rows="1"></textarea>
+      <button id="send-btn" onclick="sendMessage()" disabled>↑</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let myUsername = '';
+    let typingTimeout;
+    // reactions: { msgId: { emoji: count } }
+    const reactions = {};
+    // track last sender for grouping
+    let lastSender = null;
+
+    const EMOJIS = ['❤️', '😂', '😮', '😢', '👏', '🔥'];
+
+    // ── JOIN ──
+    document.getElementById('username-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') joinChat();
+    });
+
+    function joinChat() {
+      const input = document.getElementById('username-input');
+      const name = input.value.trim();
+      if (!name) return;
+      myUsername = name;
+      socket.emit('join', name);
+      document.getElementById('join-screen').style.display = 'none';
+      document.getElementById('chat-screen').style.display = 'flex';
+      document.getElementById('msg-input').focus();
+    }
+
+    // ── SEND ──
+    function sendMessage() {
+      const input = document.getElementById('msg-input');
+      const text = input.value.trim();
+      if (!text) return;
+      socket.emit('send_message', { text });
+      input.value = '';
+      input.style.height = 'auto';
+      document.getElementById('send-btn').disabled = true;
+      socket.emit('typing', false);
+      clearTimeout(typingTimeout);
+    }
+
+    // ── INPUT EVENTS ──
+    const msgInput = document.getElementById('msg-input');
+
+    msgInput.addEventListener('input', () => {
+      document.getElementById('send-btn').disabled = msgInput.value.trim() === '';
+      msgInput.style.height = 'auto';
+      msgInput.style.height = Math.min(msgInput.scrollHeight, 110) + 'px';
+      socket.emit('typing', true);
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => socket.emit('typing', false), 1500);
+    });
+
+    msgInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // ── RECEIVE MESSAGE ──
+    socket.on('receive_message', (msg) => {
+      const isMe = msg.username === myUsername;
+      addBubble(msg, isMe);
+    });
+
+    function addBubble(msg, isMe) {
+      const messagesEl = document.getElementById('messages');
+      reactions[msg.id] = {};
+
+      const gapTop = lastSender !== msg.username;
+      lastSender = msg.username;
+
+      const row = document.createElement('div');
+      row.className = `msg-row ${isMe ? 'me' : 'them'}${gapTop ? ' gap-top' : ''}`;
+      row.dataset.msgId = msg.id;
+
+      if (!isMe && gapTop) {
+        const name = document.createElement('div');
+        name.className = 'msg-name';
+        name.textContent = msg.username;
+        row.appendChild(name);
+      }
+
+      const bubbleWrap = document.createElement('div');
+      bubbleWrap.className = 'bubble-wrap';
+
+      // Emoji picker
+      const picker = document.createElement('div');
+      picker.className = 'emoji-picker';
+      EMOJIS.forEach(emoji => {
+        const span = document.createElement('span');
+        span.textContent = emoji;
+        span.title = emoji;
+        span.addEventListener('click', (e) => {
+          e.stopPropagation();
+          addReaction(msg.id, emoji, row);
+          picker.classList.remove('show');
+        });
+        picker.appendChild(span);
+      });
+      bubbleWrap.appendChild(picker);
+
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = msg.text;
+
+      // Long press / click to show picker
+      let pressTimer;
+      bubble.addEventListener('mousedown', () => {
+        pressTimer = setTimeout(() => picker.classList.toggle('show'), 350);
+      });
+      bubble.addEventListener('mouseup', () => clearTimeout(pressTimer));
+      bubble.addEventListener('click', () => picker.classList.toggle('show'));
+
+      bubbleWrap.appendChild(bubble);
+
+      // Reaction chips container
+      const reactionBar = document.createElement('div');
+      reactionBar.className = 'reaction-bar';
+      reactionBar.id = `reactions-${msg.id}`;
+      bubbleWrap.appendChild(reactionBar);
+
+      row.appendChild(bubbleWrap);
+
+      const time = document.createElement('div');
+      time.className = 'msg-time';
+      time.textContent = msg.time;
+      row.appendChild(time);
+
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      // close picker when clicking elsewhere
+      document.addEventListener('click', () => picker.classList.remove('show'), { once: true });
+    }
+
+    function addReaction(msgId, emoji, row) {
+      if (!reactions[msgId]) reactions[msgId] = {};
+      reactions[msgId][emoji] = (reactions[msgId][emoji] || 0) + 1;
+      renderReactions(msgId);
+    }
+
+    function renderReactions(msgId) {
+      const bar = document.getElementById(`reactions-${msgId}`);
+      if (!bar) return;
+      bar.innerHTML = '';
+      const data = reactions[msgId];
+      const entries = Object.entries(data).filter(([,c]) => c > 0);
+      if (entries.length === 0) {
+        bar.classList.remove('visible');
+        return;
+      }
+      bar.classList.add('visible');
+      entries.forEach(([emoji, count]) => {
+        const chip = document.createElement('div');
+        chip.className = 'reaction-chip';
+        chip.innerHTML = `${emoji}<span class="count">${count > 1 ? count : ''}</span>`;
+        chip.addEventListener('click', () => {
+          reactions[msgId][emoji] = (reactions[msgId][emoji] || 1) - 1;
+          renderReactions(msgId);
+        });
+        bar.appendChild(chip);
+      });
+    }
+
+    // ── SYSTEM MESSAGES ──
+    socket.on('system_message', (text) => {
+      lastSender = null;
+      const messages = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = 'system-msg';
+      div.textContent = text;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    });
+
+    // ── TYPING INDICATOR ──
+    socket.on('user_typing', ({ username, isTyping }) => {
+      const el = document.getElementById('typing-indicator');
+      if (isTyping) {
+        el.innerHTML = `<span>${username} is typing</span><div class="typing-dots"><span></span><span></span><span></span></div>`;
+      } else {
+        el.innerHTML = '';
+      }
+    });
+
+    // ── ONLINE COUNT ──
+    socket.on('user_list', (users) => {
+      document.getElementById('online-count').textContent = `${users.length} online`;
+    });
+  </script>
+</body>
+</html>
