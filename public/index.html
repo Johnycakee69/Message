@@ -74,6 +74,220 @@
       100% { opacity: 0; transform: translateY(-180px) scale(0.7) rotate(-5deg); }
     }
 
+    /* ── CAT ── */
+    .cat-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    .cat {
+      position: relative;
+      width: 90px;
+      height: 90px;
+      animation: catBounce 2s ease-in-out infinite;
+    }
+
+    @keyframes catBounce {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+
+    /* body */
+    .cat-body {
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 56px; height: 44px;
+      background: #f0c090;
+      border-radius: 50% 50% 46% 46% / 60% 60% 40% 40%;
+    }
+
+    /* head */
+    .cat-head {
+      position: absolute;
+      bottom: 36px; left: 50%;
+      transform: translateX(-50%);
+      width: 48px; height: 44px;
+      background: #f0c090;
+      border-radius: 50%;
+    }
+
+    /* ears */
+    .cat-head::before,
+    .cat-head::after {
+      content: '';
+      position: absolute;
+      top: -12px;
+      width: 0; height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 18px solid #f0c090;
+    }
+    .cat-head::before { left: 2px; transform: rotate(-10deg); }
+    .cat-head::after  { right: 2px; transform: rotate(10deg); }
+
+    /* inner ears */
+    .cat-ear-inner {
+      position: absolute;
+      top: -8px;
+      width: 0; height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 10px solid #f4a0a0;
+    }
+    .cat-ear-inner.left  { left: 8px; }
+    .cat-ear-inner.right { right: 8px; }
+
+    /* eyes */
+    .cat-eyes {
+      position: absolute;
+      top: 14px; left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+    }
+
+    .cat-eye {
+      width: 8px; height: 8px;
+      background: #3a2010;
+      border-radius: 50%;
+      position: relative;
+      animation: blink 4s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%,94%,100% { transform: scaleY(1); }
+      96%,98%     { transform: scaleY(0.1); }
+    }
+
+    .cat-eye::after {
+      content: '';
+      position: absolute;
+      top: 1px; left: 1px;
+      width: 3px; height: 3px;
+      background: #fff;
+      border-radius: 50%;
+    }
+
+    /* nose */
+    .cat-nose {
+      position: absolute;
+      top: 25px; left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 4px solid #e07070;
+    }
+
+    /* mouth */
+    .cat-mouth {
+      position: absolute;
+      top: 29px; left: 50%;
+      transform: translateX(-50%);
+      width: 14px; height: 5px;
+      border-bottom: 2px solid #c06060;
+      border-radius: 0 0 50% 50%;
+    }
+
+    /* whiskers */
+    .cat-whiskers {
+      position: absolute;
+      top: 24px; left: 50%;
+      transform: translateX(-50%);
+      width: 48px;
+      pointer-events: none;
+    }
+
+    .whisker {
+      position: absolute;
+      height: 1.5px;
+      background: #c0906060;
+      border-radius: 2px;
+      top: 0;
+    }
+    .whisker.l1 { width: 18px; right: calc(50% + 4px); transform: rotate(-8deg); }
+    .whisker.l2 { width: 18px; right: calc(50% + 4px); top: 5px; transform: rotate(8deg); }
+    .whisker.r1 { width: 18px; left: calc(50% + 4px); transform: rotate(8deg); }
+    .whisker.r2 { width: 18px; left: calc(50% + 4px); top: 5px; transform: rotate(-8deg); }
+
+    /* tail */
+    .cat-tail {
+      position: absolute;
+      bottom: 4px; right: -14px;
+      width: 28px; height: 14px;
+      border-right: 4px solid #f0c090;
+      border-top: 4px solid transparent;
+      border-radius: 0 40px 0 0;
+      transform-origin: left bottom;
+      animation: tailWag 1.4s ease-in-out infinite;
+    }
+
+    @keyframes tailWag {
+      0%,100% { transform: rotate(0deg); }
+      50%      { transform: rotate(20deg); }
+    }
+
+    /* paws */
+    .cat-paw {
+      position: absolute;
+      bottom: -4px;
+      width: 14px; height: 8px;
+      background: #f0c090;
+      border-radius: 50%;
+    }
+    .cat-paw.left  { left: 10px; }
+    .cat-paw.right { right: 10px; }
+
+    /* speech bubble */
+    .cat-bubble {
+      background: rgba(255,255,255,0.9);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-size: 0.82rem;
+      color: var(--accent);
+      font-style: italic;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      position: relative;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 16px var(--accent-glow);
+      animation: bubblePulse 2s ease-in-out infinite;
+      white-space: nowrap;
+    }
+
+    .cat-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -8px; left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 8px solid rgba(255,255,255,0.9);
+    }
+
+    .cat-bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -10px; left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 9px solid var(--border);
+    }
+
+    @keyframes bubblePulse {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.04); }
+    }
+
     /* ── JOIN SCREEN ── */
     #join-screen {
       position: relative;
@@ -497,6 +711,35 @@
 
   <!-- JOIN SCREEN -->
   <div id="join-screen">
+
+    <!-- Cat animation -->
+    <div class="cat-wrap">
+      <div class="cat-bubble">Please talk to me 🐾</div>
+      <div class="cat">
+        <div class="cat-head">
+          <div class="cat-ear-inner left"></div>
+          <div class="cat-ear-inner right"></div>
+          <div class="cat-eyes">
+            <div class="cat-eye"></div>
+            <div class="cat-eye"></div>
+          </div>
+          <div class="cat-nose"></div>
+          <div class="cat-mouth"></div>
+          <div class="cat-whiskers">
+            <div class="whisker l1"></div>
+            <div class="whisker l2"></div>
+            <div class="whisker r1"></div>
+            <div class="whisker r2"></div>
+          </div>
+        </div>
+        <div class="cat-body">
+          <div class="cat-paw left"></div>
+          <div class="cat-paw right"></div>
+        </div>
+        <div class="cat-tail"></div>
+      </div>
+    </div>
+
     <div class="join-title">
       <h1>just us<span>♥</span></h1>
       <p>Enter your name to begin</p>
