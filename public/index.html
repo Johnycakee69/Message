@@ -461,9 +461,6 @@
     const socket = io();
     let myUsername = '';
     let typingTimeout;
-    // reactions: { msgId: { emoji: count } }
-    const reactions = {};
-    // track last sender for grouping
     let lastSender = null;
 
     const EMOJIS = ['❤️', '😂', '😮', '😢', '👏', '🔥'];
@@ -524,8 +521,6 @@
 
     function addBubble(msg, isMe) {
       const messagesEl = document.getElementById('messages');
-      reactions[msg.id] = {};
-
       const gapTop = lastSender !== msg.username;
       lastSender = msg.username;
 
@@ -552,7 +547,7 @@
         span.title = emoji;
         span.addEventListener('click', (e) => {
           e.stopPropagation();
-          addReaction(msg.id, emoji, row);
+          addReaction(msg.id, emoji);
           picker.classList.remove('show');
         });
         picker.appendChild(span);
@@ -593,17 +588,14 @@
       document.addEventListener('click', () => picker.classList.remove('show'), { once: true });
     }
 
-    function addReaction(msgId, emoji, row) {
-      if (!reactions[msgId]) reactions[msgId] = {};
-      reactions[msgId][emoji] = (reactions[msgId][emoji] || 0) + 1;
-      renderReactions(msgId);
+    function addReaction(msgId, emoji) {
+      socket.emit('react_message', { msgId, emoji });
     }
 
-    function renderReactions(msgId) {
+    function renderReactions(msgId, data) {
       const bar = document.getElementById(`reactions-${msgId}`);
       if (!bar) return;
       bar.innerHTML = '';
-      const data = reactions[msgId];
       const entries = Object.entries(data).filter(([,c]) => c > 0);
       if (entries.length === 0) {
         bar.classList.remove('visible');
@@ -615,12 +607,22 @@
         chip.className = 'reaction-chip';
         chip.innerHTML = `${emoji}<span class="count">${count > 1 ? count : ''}</span>`;
         chip.addEventListener('click', () => {
-          reactions[msgId][emoji] = (reactions[msgId][emoji] || 1) - 1;
-          renderReactions(msgId);
+          socket.emit('unreact_message', { msgId, emoji });
         });
         bar.appendChild(chip);
       });
     }
+
+    // ── REACTION SYNC ──
+    socket.on('reaction_update', ({ msgId, reactions }) => {
+      renderReactions(msgId, reactions);
+    });
+
+    socket.on('all_reactions', (allReactions) => {
+      Object.entries(allReactions).forEach(([msgId, data]) => {
+        renderReactions(msgId, data);
+      });
+    });
 
     // ── SYSTEM MESSAGES ──
     socket.on('system_message', (text) => {
